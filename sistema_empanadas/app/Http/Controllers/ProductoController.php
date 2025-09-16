@@ -49,13 +49,11 @@ class ProductoController extends Controller
         return redirect()->route('productos.index')->with('success', 'Producto actualizado correctamente.');
     }
 
-    public function destroy(Producto $producto)
-    {
-        if ($producto->detalles()->exists()) {
-            return back()->with('error', 'No puedes eliminar un producto con pedidos registrados.');
-        }
-
-        $producto->delete();
-        return redirect()->route('productos.index')->with('success', 'Producto eliminado.');
+    public function destroy(Producto $producto) {
+    if ($producto->ventas()->exists() || $producto->detalles()->exists()) {
+        return back()->with('error', 'No se puede eliminar un producto con ventas registradas.');
+    }
+    $producto->delete();
+    return back()->with('success', 'Producto eliminado.');
     }
 }
