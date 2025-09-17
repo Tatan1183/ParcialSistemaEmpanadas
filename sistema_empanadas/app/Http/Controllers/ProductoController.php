@@ -50,7 +50,7 @@ class ProductoController extends Controller
     }
 
     public function destroy(Producto $producto) {
-    if ($producto->ventas()->exists() || $producto->detalles()->exists()) {
+    if ($producto->detalles()->exists()) {
         return back()->with('error', 'No se puede eliminar un producto con ventas registradas.');
     }
     $producto->delete();

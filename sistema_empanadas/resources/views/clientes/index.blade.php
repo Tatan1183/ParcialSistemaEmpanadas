@@ -24,8 +24,10 @@
                             <tr>
                                 <th>ID</th>
                                 <th>Nombre</th>
+                                <th>Documento</th>
                                 <th>Correo</th>
                                 <th>Dirección</th>
+                                <th>Ciudad</th>
                                 <th>Teléfono</th>
                                 <th>Acciones</th>
                             </tr>
@@ -35,8 +37,10 @@
                                 <tr>
                                     <td>{{ $cliente->id }}</td>
                                     <td>{{ $cliente->nombre }}</td>
+                                    <td>{{ $cliente->documento_identidad }}</td>
                                     <td>{{ $cliente->correo }}</td>
                                     <td>{{ $cliente->direccion }}</td>
+                                    <td>{{ $cliente->ciudad }}</td>
                                     <td>{{ $cliente->telefono }}</td>
                                     <td>
                                         <a href="{{ route('clientes.edit', $cliente->id) }}" class="btn btn-warning btn-sm">

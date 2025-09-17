@@ -22,6 +22,13 @@
             <form action="{{ route('clientes.update', $cliente->id) }}" method="POST">
                 @csrf
                 @method('PUT')
+                <div class="row">
+                <!-- Documento de Identidad -->
+                <div class="col-md-6 mb-3">
+                    <label for="documento_identidad" class="form-label">Documento de Identidad</label>
+                    <input type="text" class="form-control" id="documento_identidad" name="documento_identidad" 
+                           value="{{ old('documento_identidad', $cliente->documento_identidad) }}" required>
+                </div>
                 <div class="row g-3">
                     <div class="col-md-6">
                         <label for="nombre" class="form-label">Nombre</label>
@@ -36,6 +43,11 @@
                     <div class="col-md-6">
                         <label for="direccion" class="form-label">Dirección</label>
                         <input type="text" name="direccion" class="form-control" value="{{ old('direccion', $cliente->direccion) }}" required>
+                    </div>
+                    <div class="form-group">
+                         <label for="ciudad">Ciudad</label>
+                         <input type="text" class="form-control" id="ciudad" name="ciudad"
+                         value="{{ old('ciudad', $cliente->ciudad ?? '') }}" required>
                     </div>
 
                     <div class="col-md-6">

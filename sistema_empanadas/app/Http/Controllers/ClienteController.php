@@ -31,9 +31,12 @@ class ClienteController extends Controller
     {
         $request->validate([
             'nombre' => 'required|string|max:255',
+            'documento_identidad' => 'required|string|unique:clientes,documento_identidad',
             'correo' => 'required|email|unique:clientes',
             'direccion' => 'required|string|max:255',
+            'ciudad' => 'required|string|max:20',
             'telefono' => 'required|string|max:20',
+            
         ]);
 
         Cliente::create($request->all());
@@ -57,9 +60,12 @@ class ClienteController extends Controller
     {
         $request->validate([
             'nombre' => 'required|string|max:255',
+            'documento_identidad' => 'required|string|unique:clientes,documento_identidad,' . $cliente->id,
             'correo' => 'required|email|unique:clientes,correo,' . $cliente->id,
             'direccion' => 'required|string|max:255',
+            'ciudad' => 'required|string|max:20',
             'telefono' => 'required|string|max:20',
+            
         ]);
 
         $cliente->update($request->all());

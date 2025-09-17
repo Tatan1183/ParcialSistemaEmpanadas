@@ -9,7 +9,7 @@
 <body class="bg-light">
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
         <div class="container">
-            <a class="navbar-brand" href="{{ route('menu') }}">🥟 Empanadas</a>
+            <a class="navbar-brand" href="{{ route('admin') }}">🥟 Empanadas</a>
             <div>
                 <a class="btn btn-outline-light btn-sm" href="{{ route('productos.index') }}">Productos</a>
                 <a class="btn btn-outline-light btn-sm" href="{{ route('clientes.index') }}">Clientes</a>
