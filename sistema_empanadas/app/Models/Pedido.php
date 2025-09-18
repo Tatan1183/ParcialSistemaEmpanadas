@@ -10,14 +10,21 @@ class Pedido extends Model
     use HasFactory;
 
     protected $fillable = ['cliente_id', 'total', 'fecha'];
+    
+    /**
+     * The attributes that should be cast.
+     *
+     * @var array
+     */
+    protected $casts = [
+        'fecha' => 'datetime', // ¡Esta es la línea mágica!
+    ];
 
-    // Un pedido pertenece a un cliente
     public function cliente()
     {
         return $this->belongsTo(Cliente::class);
     }
 
-    // Un pedido tiene muchos detalles
     public function detalles()
     {
         return $this->hasMany(PedidoDetalle::class);

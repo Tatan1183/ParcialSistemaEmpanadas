@@ -97,7 +97,7 @@
                             <tbody>
                                 @forelse($ventasPorDia as $venta)
                                     <tr>
-                                        <td>{{ \Carbon\Carbon::parse($venta->dia)->format('d \d\e F, Y') }}</td>
+                                        <td>{{ $venta->dia->format('d \d\e F, Y') }}</td>
                                         <td>${{ number_format($venta->total, 0, ',', '.') }}</td>
                                     </tr>
                                 @empty
