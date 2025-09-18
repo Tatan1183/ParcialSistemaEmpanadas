@@ -1,112 +1,161 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="container">
-    <h1 class="mb-4 text-center">📊 Informe de Ventas</h1>
+<div class="container-fluid">
+    <div class="d-flex align-items-center mb-4">
+        <h1 class="display-5"><i class="bi bi-bar-chart-line-fill text-primary"></i> Informe de Ventas</h1>
+    </div>
 
-    {{-- Ventas por Día --}}
-    <div class="card mb-4 shadow-sm">
-        <div class="card-header bg-primary text-white">
-            <i class="bi bi-calendar3"></i> Ventas por Día
+    <!-- Fila de Tarjetas de Resumen -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card text-white bg-success shadow">
+                <div class="card-body d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5 class="card-title">Ventas Totales</h5>
+                        <p class="card-text fs-4 fw-bold">${{ number_format($totalVentas, 0, ',', '.') }}</p>
+                    </div>
+                    <i class="bi bi-cash-coin" style="font-size: 3rem;"></i>
+                </div>
+            </div>
         </div>
-        <div class="card-body">
-            <table class="table table-bordered table-striped">
-                <thead class="table-primary">
-                    <tr>
-                        <th>Día</th>
-                        <th>Total</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach($ventasPorDia as $venta)
-                        <tr>
-                            <td>{{ $venta->dia ?? $venta->fecha ?? $venta->created_at }}</td>
-                            <td>${{ number_format($venta->total, 0, ',', '.') }}</td>
-                        </tr>
-                    @endforeach
-                </tbody>
-            </table>
+        <div class="col-md-4">
+            <div class="card text-white bg-primary shadow">
+                <div class="card-body d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5 class="card-title">N° de Ventas</h5>
+                        <p class="card-text fs-4 fw-bold">{{ $totalPedidos }}</p>
+                    </div>
+                    <i class="bi bi-receipt" style="font-size: 3rem;"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card text-dark bg-warning shadow">
+                <div class="card-body d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5 class="card-title">Producto Estrella</h5>
+                        <p class="card-text fs-4 fw-bold">
+                            {{ $productoMasVendido->nombre ?? 'N/A' }}
+                        </p>
+                    </div>
+                    <i class="bi bi-star-fill" style="font-size: 3rem;"></i>
+                </div>
+            </div>
         </div>
     </div>
 
-    {{-- Ventas por Producto --}}
-    <div class="card mb-4 shadow-sm">
-        <div class="card-header bg-success text-white">
-            <i class="bi bi-box-seam"></i> Ventas por Producto
+    <!-- Fila de Tablas de Informes -->
+    <div class="row">
+        <!-- Columna Principal -->
+        <div class="col-lg-8">
+            <!-- Ventas por Producto -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-box-seam"></i> Ventas por Producto</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Producto</th>
+                                    <th>Cantidad Vendida</th>
+                                    <th>Total Generado</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @forelse($ventasPorProducto as $venta)
+                                    <tr>
+                                        <td>{{ $venta->nombre }}</td>
+                                        <td>{{ $venta->cantidad }}</td>
+                                        <td>${{ number_format($venta->total, 0, ',', '.') }}</td>
+                                    </tr>
+                                @empty
+                                    <tr><td colspan="3" class="text-center">No hay datos para mostrar.</td></tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Ventas por Día -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-calendar-day"></i> Ventas Recientes (Últimos 15 días)</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Día</th>
+                                    <th>Total del Día</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @forelse($ventasPorDia as $venta)
+                                    <tr>
+                                        <td>{{ \Carbon\Carbon::parse($venta->dia)->format('d \d\e F, Y') }}</td>
+                                        <td>${{ number_format($venta->total, 0, ',', '.') }}</td>
+                                    </tr>
+                                @empty
+                                    <tr><td colspan="2" class="text-center">No hay datos para mostrar.</td></tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
         </div>
-        <div class="card-body">
-            <table class="table table-bordered table-striped">
-                <thead class="table-success">
-                    <tr>
-                        <th>Producto</th>
-                        <th>Cantidad</th>
-                        <th>Total</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach($ventasPorProducto as $venta)
-                        <tr>
-                            <td>{{ $venta->nombre }}</td>
-                            <td>{{ $venta->cantidad }}</td>
-                            <td>${{ number_format($venta->total, 0, ',', '.') }}</td>
-                        </tr>
-                    @endforeach
-                </tbody>
-            </table>
-        </div>
-    </div>
 
-    {{-- Ventas por Cliente --}}
-    <div class="card mb-4 shadow-sm">
-        <div class="card-header bg-warning text-dark">
-            <i class="bi bi-people"></i> Ventas por Tipo de Cliente
-        </div>
-        <div class="card-body">
-            <table class="table table-bordered table-striped">
-                <thead class="table-warning">
-                    <tr>
-                        <th>Tipo Cliente</th>
-                        <th>Total</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach($ventasPorCliente as $venta)
-                        <tr>
-                            <td>{{ $venta->tipo_cliente }}</td>
-                            <td>${{ number_format($venta->total, 0, ',', '.') }}</td>
-                        </tr>
-                    @endforeach
-                </tbody>
-            </table>
-        </div>
-    </div>
-
-    {{-- Ventas por Ciudad --}}
-    <div class="card mb-4 shadow-sm">
-        <div class="card-header bg-info text-white">
-            <i class="bi bi-building"></i> Ventas por Ciudad
-        </div>
-        <div class="card-body">
-            <table class="table table-bordered table-striped">
-                <thead class="table-info">
-                    <tr>
-                        <th>Ciudad</th>
-                        <th>Total</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach($ventasPorCiudad as $venta)
-                        <tr>
-                            <td>{{ $venta->ciudad }}</td>
-                            <td>${{ number_format($venta->total, 0, ',', '.') }}</td>
-                        </tr>
-                    @endforeach
-                </tbody>
-            </table>
+        <!-- Columna Secundaria -->
+        <div class="col-lg-4">
+            <!-- Ventas por Tipo de Cliente -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-people"></i> Ventas por Tipo de Cliente</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table">
+                        <tbody>
+                            @forelse($ventasPorCliente as $venta)
+                                <tr>
+                                    <td><strong>{{ $venta->tipo_cliente }}</strong></td>
+                                    <td class="text-end">${{ number_format($venta->total, 0, ',', '.') }}</td>
+                                </tr>
+                            @empty
+                                <tr><td class="text-center">No hay datos.</td></tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <!-- Ventas por Ciudad -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-geo-alt"></i> Ventas por Ciudad (Clientes Registrados)</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table">
+                         <tbody>
+                            @forelse($ventasPorCiudad as $venta)
+                                <tr>
+                                    <td><strong>{{ $venta->ciudad }}</strong></td>
+                                    <td class="text-end">${{ number_format($venta->total, 0, ',', '.') }}</td>
+                                </tr>
+                            @empty
+                                <tr><td class="text-center">No hay datos.</td></tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
     </div>
 </div>
 @endsection
-
 
 

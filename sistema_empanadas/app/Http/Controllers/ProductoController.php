@@ -22,8 +22,9 @@ class ProductoController extends Controller
     {
         $request->validate([
             'nombre' => 'required|string|max:100',
-            'precio' => 'required|numeric|min:0',
-            'stock' => 'required|integer|min:0',
+            'precio' => 'required|numeric|min:0', // No negativo
+            'stock' => 'required|integer|min:0',  // No negativo
+            'descripcion' => 'nullable|string',
         ]);
 
         Producto::create($request->all());
@@ -40,8 +41,9 @@ class ProductoController extends Controller
     {
         $request->validate([
             'nombre' => 'required|string|max:100',
-            'precio' => 'required|numeric|min:0',
-            'stock' => 'required|integer|min:0',
+            'precio' => 'required|numeric|min:0', // No negativo
+            'stock' => 'required|integer|min:0',  // No negativo
+            'descripcion' => 'nullable|string',
         ]);
 
         $producto->update($request->all());
@@ -49,11 +51,13 @@ class ProductoController extends Controller
         return redirect()->route('productos.index')->with('success', 'Producto actualizado correctamente.');
     }
 
-    public function destroy(Producto $producto) {
-    if ($producto->detalles()->exists()) {
-        return back()->with('error', 'No se puede eliminar un producto con ventas registradas.');
-    }
-    $producto->delete();
-    return back()->with('success', 'Producto eliminado.');
+    public function destroy(Producto $producto)
+    {
+        // Restricción: No eliminar si el producto tiene ventas asociadas
+        if ($producto->detalles()->exists()) {
+            return back()->with('error', 'No se puede eliminar un producto con ventas registradas.');
+        }
+        $producto->delete();
+        return back()->with('success', 'Producto eliminado.');
     }
 }

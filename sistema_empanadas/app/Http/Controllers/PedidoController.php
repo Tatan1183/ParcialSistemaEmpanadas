@@ -7,86 +7,89 @@ use App\Models\Cliente;
 use App\Models\Producto;
 use App\Models\PedidoDetalle;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 
 class PedidoController extends Controller
 {
     public function index()
     {
-        $pedidos = Pedido::with('cliente', 'detalles.producto')->get();
+        $pedidos = Pedido::with('cliente', 'detalles.producto')->orderBy('fecha', 'desc')->get();
         return view('pedidos.index', compact('pedidos'));
     }
 
     public function create()
     {
-        $clientes = Cliente::all();
-        $productos = Producto::all();
-        return view('pedidos.create', compact('clientes', 'productos'));
+        $clientes = Cliente::orderBy('nombre')->get();
+        $productos = Producto::where('stock', '>', 0)->orderBy('nombre')->get(); // Solo productos con stock
+        $clienteMostrador = Cliente::where('nombre', 'Cliente de Mostrador')->first();
+
+        return view('pedidos.create', compact('clientes', 'productos', 'clienteMostrador'));
     }
 
     public function store(Request $request)
     {
-    $request->validate([
-        'cliente_id' => 'required|exists:clientes,id',
-        'producto_id' => 'required|array',
-        'producto_id.*' => 'exists:productos,id',
-        'cantidad' => 'required|array',
-        'cantidad.*' => 'integer|min:1',
-    ]);
+        $request->validate([
+            'cliente_id' => 'required|exists:clientes,id',
+            'productos' => 'required|array|min:1',
+            'productos.*.id' => 'required|exists:productos,id',
+            'productos.*.cantidad' => 'required|integer|min:1',
+        ]);
 
-    // Crear pedido vacío con total inicial en 0
-    $pedido = Pedido::create([
-        'cliente_id' => $request->cliente_id,
-        'total' => 0,
-        'fecha' => Carbon::now(),
-    ]);
-
-    $total = 0;
-
-    foreach ($request->producto_id as $i => $producto_id) {
-        $producto = Producto::find($producto_id);
-        $cantidad = $request->cantidad[$i];
-
-        // 🚨 Validar stock disponible antes de continuar
-        if ($producto->stock < $cantidad) {
-            // Si no hay suficiente stock, cancelar pedido creado
-            $pedido->delete();
-            return back()->withErrors([
-                'error' => "Stock insuficiente para {$producto->nombre} (disponible: {$producto->stock}, solicitado: {$cantidad})"
+        // Usamos una transacción para garantizar la integridad de los datos
+        DB::beginTransaction();
+        try {
+            // 1. Crear el pedido
+            $pedido = Pedido::create([
+                'cliente_id' => $request->cliente_id,
+                'total' => 0, // El total se calculará después
+                'fecha' => Carbon::now(),
             ]);
+
+            $totalPedido = 0;
+
+            // 2. Procesar cada producto del pedido
+            foreach ($request->productos as $productoData) {
+                $producto = Producto::find($productoData['id']);
+                $cantidad = $productoData['cantidad'];
+
+                // 2.1. Validar si hay stock suficiente
+                if ($producto->stock < $cantidad) {
+                    // Si no hay stock, revertimos todo y mandamos error
+                    DB::rollBack();
+                    return redirect()->route('pos')->with('error', "Stock insuficiente para {$producto->nombre}. Disponible: {$producto->stock}.");
+                }
+
+                // 2.2. Crear el detalle del pedido
+                $subtotal = $producto->precio * $cantidad;
+                PedidoDetalle::create([
+                    'pedido_id' => $pedido->id,
+                    'producto_id' => $producto->id,
+                    'cantidad' => $cantidad,
+                    'precio_unitario' => $producto->precio,
+                    'subtotal' => $subtotal,
+                ]);
+
+                // 2.3. Actualizar el stock del producto
+                $producto->decrement('stock', $cantidad);
+
+                // 2.4. Acumular el total
+                $totalPedido += $subtotal;
+            }
+
+            // 3. Actualizar el total del pedido
+            $pedido->total = $totalPedido;
+            $pedido->save();
+
+            // Si todo salió bien, confirmamos la transacción
+            DB::commit();
+
+            return redirect()->route('pos')->with('success', 'Venta registrada correctamente. Total: $' . number_format($totalPedido));
+
+        } catch (\Exception $e) {
+            // Si algo falla, revertimos todo
+            DB::rollBack();
+            return redirect()->route('pos')->with('error', 'Ocurrió un error al registrar la venta: ' . $e->getMessage());
         }
-
-        // Verificar si ya existe un detalle de este producto en el pedido
-        $detalle = PedidoDetalle::where('pedido_id', $pedido->id)
-                                ->where('producto_id', $producto_id)
-                                ->first();
-
-        if ($detalle) {
-            // Si ya existe, sumamos cantidades y recalculamos subtotal
-            $detalle->cantidad += $cantidad;
-            $detalle->subtotal = $detalle->cantidad * $detalle->precio_unitario;
-            $detalle->save();
-        } else {
-            // Si no existe, lo creamos
-            PedidoDetalle::create([
-                'pedido_id' => $pedido->id,
-                'producto_id' => $producto->id,
-                'cantidad' => $cantidad,
-                'precio_unitario' => $producto->precio,
-                'subtotal' => $producto->precio * $cantidad,
-            ]);
-        }
-
-        // Restar stock
-        $producto->decrement('stock', $cantidad);
-
-        // Acumular al total
-        $total += $producto->precio * $cantidad;
-    }
-
-    // Actualizar total del pedido
-    $pedido->update(['total' => $total]);
-
-    return redirect()->route('pedidos.index')->with('success', 'Pedido registrado correctamente.');
     }
 }
